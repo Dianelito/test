@@ -1,0 +1,180 @@
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║          PlexyTebex v2.0.0  |  by ItzThiago401               ║
+# ║                  PlexyStudios  © 2025                         ║
+# ╠═══════════════════════════════════════════════════════════════╣
+# ║  Commands (require plexytebex.admin permission):             ║
+# ║   /plexytebex help                — show help                ║
+# ║   /plexytebex reload              — reload config + lang     ║
+# ║   /plexytebex test                — simulate a purchase      ║
+# ║   /plexytebex top                 — top buyers this month    ║
+# ║   /plexytebex sale on [text]      — activate sale bossbar    ║
+# ║   /plexytebex sale off            — deactivate sale bossbar  ║
+# ║   /plexytebex announce <id>       — trigger an announcement  ║
+# ║   /plexytebex args                — list placeholders        ║
+# ║   /plexytebex lang                — show current language    ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# ───────────────────────────────────────────────────────────────
+#  GENERAL
+# ───────────────────────────────────────────────────────────────
+general:
+  # Language for plugin messages: en | es | pt | fr | de
+  language: en
+
+  # File where purchase stats are saved
+  stats-file: "stats.json"
+
+# ───────────────────────────────────────────────────────────────
+#  PLACEHOLDERS
+#  Tokens passed by Tebex as key(value) in the command.
+#  Example:  /plexytebex player(Steve) package(VIP) price($9.99)
+# ───────────────────────────────────────────────────────────────
+placeholders:
+  - player
+  - package
+  - price
+
+# ───────────────────────────────────────────────────────────────
+#  PURCHASE BROADCAST
+#  Sent to all players on the network when a purchase is made.
+#  Chat lines are taken from the active lang file.
+# ───────────────────────────────────────────────────────────────
+broadcast:
+
+  # Visual effects on purchase
+  effects:
+
+    title:
+      enabled: true
+      # GLOBAL = all players | PLAYER = buyer only
+      type: GLOBAL
+      fade-in:  10   # ticks
+      stay:     60   # ticks
+      fade-out: 20   # ticks
+
+    sound:
+      enabled: true
+      type: GLOBAL
+      # Use Bukkit enum (ENTITY_PLAYER_LEVELUP) or namespaced key (minecraft:entity.player.levelup)
+      id: ENTITY_PLAYER_LEVELUP
+      volume: 1.0
+      pitch: 1.0
+
+    fireworks:
+      # Requires a companion Bukkit plugin on the backend to handle the plugin message
+      enabled: false
+      count: 3
+
+# ───────────────────────────────────────────────────────────────
+#  BUTTONS
+#  Clickable buttons shown on the %buttons% line of the broadcast.
+# ───────────────────────────────────────────────────────────────
+buttons:
+  padding: 11
+  list:
+    shop:
+      text:     "<gradient:#268EF4:#0061C0>[ Shop ]</gradient>"
+      hover:    "<aqua>Click to open the store</aqua>"
+      open_url: "https://shop.yourserver.com/"
+
+    discord:
+      text:     "<gradient:#7289DA:#4752C4>[ Discord ]</gradient>"
+      hover:    "<aqua>Click to join our Discord</aqua>"
+      open_url: "https://discord.gg/yourserver"
+
+# ───────────────────────────────────────────────────────────────
+#  ANNOUNCEMENTS
+#  Manual:    /plexytebex announce <id>
+#  Automatic: fires all enabled announcements on the interval below
+# ───────────────────────────────────────────────────────────────
+announcements:
+
+  # Auto-broadcast interval in minutes (0 = disabled)
+  auto-interval: 60
+
+  list:
+    weekend-sale:
+      enabled: true
+      message:
+        - "<empty>"
+        - "<center><gradient:#FF9500:#FF5E00><bold> WEEKEND SALE </bold></gradient></center>"
+        - "<empty>"
+        - "<center><white>50% OFF on all ranks this weekend!</white></center>"
+        - "<center><gray>Limited time only — don't miss out!</gray></center>"
+        - "<empty>"
+        - "%buttons%"
+        - "<empty>"
+      sound:
+        enabled: true
+        id: ENTITY_EXPERIENCE_ORB_PICKUP
+
+    flash-sale:
+      enabled: false
+      message:
+        - "<empty>"
+        - "<center><gradient:#FF0080:#8B00FF><bold> FLASH SALE </bold></gradient></center>"
+        - "<empty>"
+        - "<center><color:#FF69B4>Special discount for the next 2 hours!</color></center>"
+        - "<empty>"
+        - "%buttons%"
+        - "<empty>"
+      sound:
+        enabled: true
+        id: BLOCK_NOTE_BLOCK_PLING
+
+# ───────────────────────────────────────────────────────────────
+#  SALE BOSSBAR
+#  A persistent BossBar shown across the entire network.
+#  Activate:   /plexytebex sale on [custom text]
+#  Deactivate: /plexytebex sale off
+# ───────────────────────────────────────────────────────────────
+sale-bossbar:
+  default-text:  "<yellow><bold> SALE ACTIVE — Visit the shop! </bold></yellow>"
+  # Colors: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+  default-color: YELLOW
+
+# ───────────────────────────────────────────────────────────────
+#  TEST BROADCAST
+#  Default values used when running /plexytebex test
+# ───────────────────────────────────────────────────────────────
+test:
+  default-player:  "TestPlayer"
+  default-package: "VIP GOLD"
+  default-price:   "$9.99"
+
+# ───────────────────────────────────────────────────────────────
+#  TOP BUYERS
+# ───────────────────────────────────────────────────────────────
+top:
+  # How many players to show
+  limit: 10
+  # Auto-reset: NEVER | MONTHLY | WEEKLY
+  reset: MONTHLY
+
+# ───────────────────────────────────────────────────────────────
+#  DISCORD WEBHOOK
+#  Sends a rich embed to Discord on every purchase.
+# ───────────────────────────────────────────────────────────────
+discord:
+  enabled: false
+  url:   "INSERT-WEBHOOK-URL"
+  color: "#268EF4"
+  title: "New Purchase"
+
+  description:
+    - "**{player}** just purchased a package!"
+
+  fields:
+    - name: "Player"
+      value: "{player}"
+      inline: true
+    - name: "Package"
+      value: "{package}"
+      inline: true
+    - name: "Price"
+      value: "{price}"
+      inline: true
+
+  footer:    "PlexyStudios  •  Powered by PlexyTebex v2.0.0"
+  image:     ""
+  thumbnail: "https://mc-heads.net/avatar/{player}"

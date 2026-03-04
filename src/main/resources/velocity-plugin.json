@@ -1,0 +1,8 @@
+{
+  "id": "plexytebex",
+  "name": "PlexyTebex",
+  "version": "2.0.0",
+  "description": "Advanced Tebex broadcast plugin for Velocity by ItzThiago401 @ PlexyStudios",
+  "authors": ["ItzThiago401"],
+  "main": "dev.plexystudios.plexytebex.core.PlexyTebex"
+}

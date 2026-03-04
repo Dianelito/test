@@ -1,0 +1,82 @@
+# PlexyTebex v2.0.0 — Sprache: Deutsch
+
+prefix: "<gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>»</dark_gray> <aqua>"
+
+messages:
+
+  help:
+    - ""
+    - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Befehle"
+    - "  <dark_gray>                                        </dark_gray>"
+    - "  <aqua>/{cmd} help          <dark_gray>—</dark_gray> <white>Diese Hilfe anzeigen"
+    - "  <aqua>/{cmd} reload        <dark_gray>—</dark_gray> <white>Konfig & Sprache neu laden"
+    - "  <aqua>/{cmd} test          <dark_gray>—</dark_gray> <white>Kauf-Broadcast simulieren"
+    - "  <aqua>/{cmd} top           <dark_gray>—</dark_gray> <white>Top-Käufer des Monats"
+    - "  <aqua>/{cmd} sale on|off   <dark_gray>—</dark_gray> <white>Sale-BossBar aktivieren/deaktivieren"
+    - "  <aqua>/{cmd} announce <id> <dark_gray>—</dark_gray> <white>Rabattankündigung auslösen"
+    - "  <aqua>/{cmd} args          <dark_gray>—</dark_gray> <white>Konfigurierte Platzhalter auflisten"
+    - "  <aqua>/{cmd} lang          <dark_gray>—</dark_gray> <white>Aktuelle Sprache anzeigen"
+    - "  <dark_gray>                                        </dark_gray>"
+    - ""
+
+  args:
+    header:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Konfigurierte Platzhalter"
+      - "  <dark_gray>                                        </dark_gray>"
+    empty:  "  <red>Keine Platzhalter konfiguriert."
+    format: "  <aqua>◆ <white>{arg}"
+    footer:
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+
+  top:
+    header:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Top-Käufer des Monats"
+      - "  <dark_gray>                                        </dark_gray>"
+    entry:  "  <aqua>#{pos} <white>{player}  <dark_gray>·  <aqua>{count} <white>Käufe"
+    empty:  "  <gray>Noch keine Käufe aufgezeichnet."
+    footer:
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+
+  console:
+    usage:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Verwendung"
+      - "  <dark_gray>                                        </dark_gray>"
+      - "  <aqua>/{cmd} {usage}"
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+    available-args: "{prefix}<white>Empfangene Args: <aqua>{args}"
+
+  broadcast:
+    message:
+      - "<empty>"
+      - "<center><gradient:#268EF4:#0061C0><bold> NEUER KAUF </bold></gradient></center>"
+      - "<empty>"
+      - "<center><white>{player}</white> <gray>hat soeben gekauft:</gray> <aqua>{package}</aqua><white>!</white></center>"
+      - "<center><gray>Danke für deine Unterstützung!</gray></center>"
+      - "<empty>"
+      - "%buttons%"
+      - "<empty>"
+    title-top:    "<aqua>{player}"
+    title-bottom: "<white>Kaufte <aqua>{package} <gray>({price})"
+
+  reload:        "{prefix}<white>Konfiguration erfolgreich neu geladen."
+  no-permission: "{prefix}<red>Du hast keine Berechtigung dafür."
+  console-only:  "{prefix}<red>Dieser Befehl kann nur von der Konsole ausgeführt werden."
+  current-lang:  "{prefix}<white>Aktuelle Sprache: <aqua>{lang}"
+
+  missing-arg:      "{prefix}<red>Pflichtargument fehlt: <dark_red>{arg}"
+  invalid-format:   "{prefix}<red>Ungültiges Format. Verwende: Schlüssel(Wert)"
+  broken-parens:    "{prefix}<red>Fehlende '(' oder ')' in den Argumenten."
+  unknown-announce: "{prefix}<red>Ansage '<dark_red>{id}<red>' nicht gefunden."
+  announce-sent:    "{prefix}<white>Ansage <aqua>{id}<white> erfolgreich gesendet."
+  test-sent:        "{prefix}<white>Test gesendet — Spieler: <aqua>{player}<white> | Paket: <aqua>{package}<white> | Preis: <aqua>{price}"
+
+  sale-enabled:    "{prefix}<white>Sale-BossBar im gesamten Netzwerk aktiviert."
+  sale-disabled:   "{prefix}<white>Sale-BossBar deaktiviert."
+  sale-not-active: "{prefix}<red>Keine aktive Sale-BossBar vorhanden."
+  sale-usage:      "{prefix}<white>Verwendung: /plexytebex sale <on|off> [Text]"

@@ -1,0 +1,90 @@
+# PlexyTebex v2.0.0 — Language: English (default)
+# The {prefix} token is replaced automatically in every message.
+# Hex colors: &#RRGGBB | MiniMessage: <gradient:#hex:#hex>, <aqua>, <bold>, etc.
+
+prefix: "<gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>»</dark_gray> <aqua>"
+
+messages:
+
+  # ── /plexytebex help ──────────────────────────────────────────
+  help:
+    - ""
+    - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Commands"
+    - "  <dark_gray>                                        </dark_gray>"
+    - "  <aqua>/{cmd} help          <dark_gray>—</dark_gray> <white>Show this help"
+    - "  <aqua>/{cmd} reload        <dark_gray>—</dark_gray> <white>Reload config & language"
+    - "  <aqua>/{cmd} test          <dark_gray>—</dark_gray> <white>Simulate a purchase broadcast"
+    - "  <aqua>/{cmd} top           <dark_gray>—</dark_gray> <white>Top buyers this month"
+    - "  <aqua>/{cmd} sale on|off   <dark_gray>—</dark_gray> <white>Toggle network-wide sale BossBar"
+    - "  <aqua>/{cmd} announce <id> <dark_gray>—</dark_gray> <white>Trigger a discount announcement"
+    - "  <aqua>/{cmd} args          <dark_gray>—</dark_gray> <white>List configured placeholders"
+    - "  <aqua>/{cmd} lang          <dark_gray>—</dark_gray> <white>Show current language"
+    - "  <dark_gray>                                        </dark_gray>"
+    - ""
+
+  # ── /plexytebex args ─────────────────────────────────────────
+  args:
+    header:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Configured Placeholders"
+      - "  <dark_gray>                                        </dark_gray>"
+    empty:  "  <red>No placeholders configured."
+    format: "  <aqua>◆ <white>{arg}"
+    footer:
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+
+  # ── /plexytebex top ──────────────────────────────────────────
+  top:
+    header:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Top Buyers This Month"
+      - "  <dark_gray>                                        </dark_gray>"
+    entry:  "  <aqua>#{pos} <white>{player}  <dark_gray>·  <aqua>{count} <white>purchases"
+    empty:  "  <gray>No purchases recorded yet."
+    footer:
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+
+  # ── Console usage ────────────────────────────────────────────
+  console:
+    usage:
+      - ""
+      - "  <gradient:#268EF4:#0061C0><bold>PlexyTebex</bold></gradient> <dark_gray>—</dark_gray> <aqua>Usage"
+      - "  <dark_gray>                                        </dark_gray>"
+      - "  <aqua>/{cmd} {usage}"
+      - "  <dark_gray>                                        </dark_gray>"
+      - ""
+    available-args: "{prefix}<white>Args received: <aqua>{args}"
+
+  # ── Broadcast (shown to all players on purchase) ─────────────
+  broadcast:
+    message:
+      - "<empty>"
+      - "<center><gradient:#268EF4:#0061C0><bold> NEW PURCHASE </bold></gradient></center>"
+      - "<empty>"
+      - "<center><white>{player}</white> <gray>just purchased</gray> <aqua>{package}</aqua><white>!</white></center>"
+      - "<center><gray>Thank you for supporting the server!</gray></center>"
+      - "<empty>"
+      - "%buttons%"
+      - "<empty>"
+    title-top:    "<aqua>{player}"
+    title-bottom: "<white>Purchased <aqua>{package} <gray>({price})"
+
+  # ── General ──────────────────────────────────────────────────
+  reload:        "{prefix}<white>Configuration reloaded successfully."
+  no-permission: "{prefix}<red>You don't have permission to do that."
+  console-only:  "{prefix}<red>This command can only be run from console."
+  current-lang:  "{prefix}<white>Current language: <aqua>{lang}"
+
+  missing-arg:      "{prefix}<red>Missing required argument: <dark_red>{arg}"
+  invalid-format:   "{prefix}<red>Invalid format. Use: key(value)"
+  broken-parens:    "{prefix}<red>Missing '(' or ')' in arguments."
+  unknown-announce: "{prefix}<red>Announcement '<dark_red>{id}<red>' not found."
+  announce-sent:    "{prefix}<white>Announcement <aqua>{id}<white> sent successfully."
+  test-sent:        "{prefix}<white>Test broadcast sent — Player: <aqua>{player}<white> | Package: <aqua>{package}<white> | Price: <aqua>{price}"
+
+  sale-enabled:    "{prefix}<white>Sale BossBar activated across the network."
+  sale-disabled:   "{prefix}<white>Sale BossBar deactivated."
+  sale-not-active: "{prefix}<red>There is no active sale BossBar."
+  sale-usage:      "{prefix}<white>Usage: /plexytebex sale <on|off> [text]"
