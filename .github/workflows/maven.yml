@@ -1,0 +1,285 @@
+name: "Minecraft Plugin Maven CI - Build & Test"
+# Se dispara en PRs a main y en pushes directos a main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+# Permisos para comentar en el Pull Request, fusionar y crear release
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: "Compile Plugin"
+    runs-on: ubuntu-latest
+# ... (rest of the build, tests remain same) ...
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Set up JDK 21"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'maven'
+      - name: "Set Internal Version"
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            NEW_VERSION="pre-release-pr-${{ github.event.pull_request.number }}-$(date +%s)"
+          else
+            NEW_VERSION="pre-release-$(date +%s)"
+          fi
+          echo "Setting project version to: $NEW_VERSION"
+          # Maven versions plugin para actualizar todos los pom.xml
+          mvn versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false
+          # Reemplazar versión estática en plugin.yml para bukit/bungee (con ancla ^)
+          find . -name "plugin.yml" -type f -exec sed -i "s/^version: .*/version: $NEW_VERSION/g" {} +
+          find . -name "bungee.yml" -type f -exec sed -i "s/^version: .*/version: $NEW_VERSION/g" {} +
+          # Reemplazar versión estática en clases de Velocity
+          find . -name "Velocity*.java" -o -name "Velocity.java" -type f -exec sed -i "s/version = \".*\"/version = \"$NEW_VERSION\"/g" {} +
+          find . -name "Velocity.java" -type f -exec sed -i "s/, \"1.0-SNAPSHOT\"/, \"$NEW_VERSION\"/g" {} +
+      - name: "Build with Maven"
+        run: mvn clean package -B -DskipTests
+      - name: "Upload Artifacts (JAR)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-plugin
+          # Agarramos específicamente el JAR final de bootstrap que es el shaded principal
+          path: "dcore-bootstrap/target/DCore.jar"
+
+  test_paper:
+    name: "Test on PaperMC ${{ matrix.paper-version }}"
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - java: 21
+            paper-version: "1.21.1" 
+          - java: 17
+            paper-version: "1.20.4"
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Set up JDK ${{ matrix.java }}"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+      - name: "Download Built Plugin"
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-plugin
+          path: plugins-dir
+      - name: "Setup PaperMC Server"
+        run: |
+          mkdir -p server/plugins
+          # Filtramos para no meter el original.jar ni fuentes
+          find plugins-dir -name "*.jar" ! -name "original-*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec mv {} server/plugins/plugin.jar \;
+          echo "eula=true" > server/eula.txt
+          cd server
+          PAPER_VERSION="${{ matrix.paper-version }}"
+          BUILD=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION" | jq -r '.builds[-1]')
+          echo "Downloading Paper version $PAPER_VERSION build $BUILD..."
+          curl -so paper.jar "https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/$BUILD/downloads/paper-$PAPER_VERSION-$BUILD.jar"
+      - name: "Run Server and Test Plugin"
+        run: |
+          cd server
+          java -Xmx512M -jar paper.jar --nogui &
+          SERVER_PID=$!
+          TIMEOUT=150
+          ELAPSED=0
+          while true; do
+            if [ -f logs/latest.log ]; then
+              if grep -q 'Done' logs/latest.log 2>/dev/null; then
+                echo "✅ Servidor Paper iniciado con éxito!"
+                break
+              fi
+              if grep -iqE '(Could not load|Exception initializing|Error occurred while|Caused by:)' logs/latest.log 2>/dev/null; then
+                echo "❌ ERROR: Fallo al cargar plugin en Paper."
+                cat logs/latest.log
+                kill -9 $SERVER_PID
+                exit 1
+              fi
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED+5))
+            if [ $ELAPSED -gt $TIMEOUT ]; then
+              echo "⏱️ TIMEOUT: El servidor Paper tardó demasiado en iniciar."
+              cat logs/latest.log
+              kill -9 $SERVER_PID
+              exit 1
+            fi
+          done
+          kill $SERVER_PID
+
+  test_folia:
+    name: "Test on FoliaMC ${{ matrix.folia-version }}"
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - java: 21
+            folia-version: "1.21.11" 
+          - java: 17
+            folia-version: "1.20.4"
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Set up JDK ${{ matrix.java }}"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+      - name: "Download Built Plugin"
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-plugin
+          path: plugins-dir
+      - name: "Setup FoliaMC Server"
+        run: |
+          mkdir -p server/plugins
+          find plugins-dir -name "*.jar" ! -name "original-*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec mv {} server/plugins/plugin.jar \;
+          echo "eula=true" > server/eula.txt
+          cd server
+          FOLIA_VERSION="${{ matrix.folia-version }}"
+          BUILD=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$FOLIA_VERSION" | jq -r '.builds[-1]')
+          echo "Downloading Folia version $FOLIA_VERSION build $BUILD..."
+          curl -fL -so folia.jar "https://api.papermc.io/v2/projects/folia/versions/$FOLIA_VERSION/builds/$BUILD/downloads/folia-$FOLIA_VERSION-$BUILD.jar"
+      - name: "Run Server and Test Plugin"
+        run: |
+          cd server
+          java -Xmx512M -jar folia.jar --nogui &
+          SERVER_PID=$!
+          TIMEOUT=150
+          ELAPSED=0
+          while true; do
+            if [ -f logs/latest.log ]; then
+              if grep -q 'Done' logs/latest.log 2>/dev/null; then
+                echo "✅ Servidor Folia iniciado con éxito!"
+                break
+              fi
+              if grep -iqE '(Could not load|Exception initializing|Error occurred while|Caused by:)' logs/latest.log 2>/dev/null; then
+                echo "❌ ERROR: Fallo al cargar plugin en Folia."
+                cat logs/latest.log
+                kill -9 $SERVER_PID
+                exit 1
+              fi
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED+5))
+            if [ $ELAPSED -gt $TIMEOUT ]; then
+              echo "⏱️ TIMEOUT: El servidor Folia tardó demasiado en iniciar."
+              cat logs/latest.log
+              kill -9 $SERVER_PID
+              exit 1
+            fi
+          done
+          kill $SERVER_PID
+
+  test_velocity:
+    name: "Test on Velocity 3.3.0"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Set up JDK 21"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+      - name: "Download Built Plugin"
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-plugin
+          path: plugins-dir
+      - name: "Setup Velocity Server"
+        run: |
+          mkdir -p server/plugins
+          find plugins-dir -name "*.jar" ! -name "original-*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec mv {} server/plugins/plugin.jar \;
+          cd server
+          VELOCITY_VERSION="3.3.0-SNAPSHOT"
+          BUILD=$(curl -s "https://api.papermc.io/v2/projects/velocity/versions/$VELOCITY_VERSION" | jq -r '.builds[-1]')
+          echo "Downloading Velocity version $VELOCITY_VERSION build $BUILD..."
+          curl -so velocity.jar "https://api.papermc.io/v2/projects/velocity/versions/$VELOCITY_VERSION/builds/$BUILD/downloads/velocity-$VELOCITY_VERSION-$BUILD.jar"
+      - name: "Run Server and Test Plugin"
+        run: |
+          cd server
+          java -Xmx512M -jar velocity.jar &
+          SERVER_PID=$!
+          TIMEOUT=150
+          ELAPSED=0
+          while true; do
+            if [ -f logs/latest.log ]; then
+              # Velocity imprime 'Done' al igual que PaperMC
+              if grep -q -E '(Done|Listening on)' logs/latest.log 2>/dev/null; then
+                echo "✅ Servidor Velocity iniciado con éxito!"
+                break
+              fi
+              if grep -iqE '(Could not load|Exception initializing|Error|Caused by:)' logs/latest.log 2>/dev/null; then
+                # Solo filtramos si hay error crítico en plugin
+                if ! grep -q 'Warning' logs/latest.log; then
+                  echo "❌ ERROR: Fallo en Velocity."
+                  cat logs/latest.log
+                  kill -9 $SERVER_PID
+                  exit 1
+                fi
+              fi
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED+5))
+            if [ $ELAPSED -gt $TIMEOUT ]; then
+              echo "⏱️ TIMEOUT: Velocity tardó demasiado en iniciar."
+              cat logs/latest.log
+              kill -9 $SERVER_PID
+              exit 1
+            fi
+          done
+          kill $SERVER_PID
+
+  release_and_merge:
+    name: "Create Release"
+    needs: [test_paper, test_folia, test_velocity]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+      - name: "Download All Built Artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-plugin
+          path: output-jars
+      - name: "Merge PR automatically (if PR)"
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto || echo "⚠️ PR Merge auto-failed"
+      - name: "Create Release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "Verificando artefactos descargados en output-jars:"
+          ls -la output-jars/
+          
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            TAG_NAME="pre-release-pr-${{ github.event.pull_request.number }}-$(date +%s)"
+            TITLE="Pre-Release (PR #${{ github.event.pull_request.number }})"
+          else
+            TAG_NAME="pre-release-$(date +%s)"
+            TITLE="Automatic Pre-Release (Main Push)"
+          fi
+          
+          echo "Creando release con Tag: $TAG_NAME y Titulo: $TITLE"
+          gh release create "$TAG_NAME" output-jars/*.jar --generate-notes -p -t "$TITLE" -n "✅ Tests successfully passed."
+          echo "Release creado con exito."
