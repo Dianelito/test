@@ -48,8 +48,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compiled-plugin
-          # Agarramos específicamente el JAR final de bootstrap que es el shaded principal
-          path: "dcore-bootstrap/target/DCore.jar"
+          # Agarramos todos los JAR en target (luego se filtran los sources y original)
+          path: "target/*.jar"
+          if-no-files-found: error
 
   test_paper:
     name: "Test on PaperMC ${{ matrix.paper-version }}"
